@@ -1,5 +1,7 @@
 # ===== Pix Minecraft Functions =====
 
+Version 02
+
 # ===== Installation Variables =====
 
 PIX_USERNAME=minecraft
