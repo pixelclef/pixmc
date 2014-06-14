@@ -1,21 +1,30 @@
 # ===== Pix Minecraft Functions =====
 
-# Version 01
-# First working version
-# Includes working colormap function
-
 # ===== Installation Variables =====
 
 PIX_USERNAME=minecraft
 PIX_SERVER=vanilla
 
-# ===== Default Values =====
+PIX_DEBUG=false
+PIX_SEND=true
+
+# ===== Default Variables =====
 
 PIX_MSGCOLOR=yellow
 PIX_MSGBOLD=false
 PIX_BY='[Server]'
 
-PIX_DEBUG=false
+PIX_XMIN=-256
+PIX_XMAX=256
+PIX_YMIN=1
+PIX_YMAX=256
+PIX_ZMIN=-256
+PIX_ZMAX=256
+
+PIX_PREGENY=128
+PIX_PREGENSLEEP=5
+PIX_PREGENDELTA=100
+PIX_PLAYER=PixelClef
 
 # ===== Base Functions =====
 
@@ -28,9 +37,21 @@ function pix_debug() {
   PIX_DEBUG=true
 }
 
+function pix_disable() {
+  PIX_SEND=false
+}
+
+function pix_echo() {
+  if [ $PIX_DEBUG = "true" ]; then
+    echo $1
+  fi
+}
+
 function pix_send() {
   pix_echo "$1"
-  screen -S $PIX_SERVER -p 0 -X stuff "$1\n"
+  if [ $PIX_SEND == "true" ]; then
+    screen -S $PIX_SERVER -p 0 -X stuff "$1\n"
+  fi
 }
 
 function pix_colormap() {
@@ -53,7 +74,7 @@ function pix_colormap() {
     "4" | "dark_red" | "maroon")
       _PIX_RESULT=dark_red
       ;;
-    "5" | "dark_purple" | "purple" | "dark_magenta")
+    "5" | "dark_purple" | "purple" | "dark_magenta" | "dark_pink")
       _PIX_RESULT=dark_purple
       ;;
     "6" | "gold" | "dark_yellow" | "orange")
@@ -104,19 +125,10 @@ function pix_set() {
     "msgcolor")
       pix_colormap PIX_MSGCOLOR $2
       ;;
-    "msgbold")
-      PIX_MSGBOLD=$2
-      ;;
     *)
-      pix_errorexit "$1 is not a recognized variable."
+      eval PIX_$1=$2
       ;;
   esac
-}
-
-function pix_echo() {
-  if [ $PIX_DEBUG = "true" ]; then
-    echo $1
-  fi
 }
 
 # ===== Sending Messages to Players Ingame =====
@@ -130,7 +142,26 @@ function pix_say() {
   pix_send "say $1"
 }
 
-# ====== Enabling and Disabling Save ======
+# =====
+
+function pix_teams() {
+  for (( X = 0; X < $PIX_TPLAYERS; X += 1 )); do
+    PIX_TEAM=Team$(($X%$PIX_TTEAMS))
+    pix_send "scoreboard teams join $PIX_TEAM @r[team=]"
+    sleep 1
+  done
+}
+
+function pix_pregen() {
+  for (( X = $PIX_XMIN; X <= $PIX_XMAX; X += $PIX_PREGENDELTA )); do
+    for (( Z = $PIX_ZMIN; Z <= $PIX_ZMAX; Z += $PIX_PREGENDELTA)); do
+      pix_send "tp $PIX_PLAYER $X $PIX_PREGENY $Z"
+      sleep $PIX_PREGENSLEEP
+    done
+  done
+}
+
+# ===== Enabling and Disabling Save =====
 
 function pix_disablesave() {
   if pgrep -u $PIX_USERNAME -f $PIX_SERVER > /dev/null
@@ -156,3 +187,4 @@ function pix_enablesave() {
     pix_errorexit "$PIX_SERVER is not running. Not enabling save."
   fi
 }
+
